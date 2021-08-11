@@ -16,7 +16,12 @@ import {
 import {useAsync} from '../utils'
 
 // 🐨 Create a PokemonCacheContext
+const PokemonCacheContext = React.createContext();
 
+function PokemonCacheProvider(props) {
+  const [cache, dispatch] = React.useReducer(pokemonCacheReducer, {})
+  return <PokemonCacheContext.Provider value={[cache, dispatch]} {...props}/>
+}
 // 🐨 create a PokemonCacheProvider function
 // 🐨 useReducer with pokemonCacheReducer in your PokemonCacheProvider
 // 💰 you can grab the one that's in PokemonInfo
@@ -36,8 +41,7 @@ function pokemonCacheReducer(state, action) {
 }
 
 function PokemonInfo({pokemonName}) {
-  // 💣 remove the useReducer here (or move it up to your PokemonCacheProvider)
-  const [cache, dispatch] = React.useReducer(pokemonCacheReducer, {})
+  const [cache, dispatch] = React.useContext(PokemonCacheContext);
   // 🐨 get the cache and dispatch from useContext with PokemonCacheContext
 
   const {data: pokemon, status, error, run, setData} = useAsync()
@@ -55,7 +59,7 @@ function PokemonInfo({pokemonName}) {
         }),
       )
     }
-  }, [cache, pokemonName, run, setData])
+  }, [cache, pokemonName, run, setData, dispatch])
 
   if (status === 'idle') {
     return 'Submit a pokemon'
@@ -70,7 +74,7 @@ function PokemonInfo({pokemonName}) {
 
 function PreviousPokemon({onSelect}) {
   // 🐨 get the cache from useContext with PokemonCacheContext
-  const cache = {}
+  const [cache] = React.useContext(PokemonCacheContext);
   return (
     <div>
       Previous Pokemon
@@ -123,7 +127,9 @@ function App() {
     <div className="pokemon-info-app">
       <PokemonForm pokemonName={pokemonName} onSubmit={handleSubmit} />
       <hr />
-      <PokemonSection onSelect={handleSelect} pokemonName={pokemonName} />
+      <PokemonCacheProvider>
+        <PokemonSection onSelect={handleSelect} pokemonName={pokemonName} />
+      </PokemonCacheProvider>
     </div>
   )
 }
